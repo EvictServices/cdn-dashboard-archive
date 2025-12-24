@@ -11,34 +11,47 @@ interface Endpoint {
   example?: string;
 }
 
+const pfpCategories = ["anime", "cats", "egirls", "girls", "boys"];
+const bannerCategories = ["anime", "cute", "imsg"];
+
 const endpoints: Endpoint[] = [
+  // Avatars - Public
   {
     path: "/avatars/{userId}",
-    description: "Get user avatar by user ID",
+    description: "Get all avatars in the folder for a specific user ID",
+    protected: false,
+    method: "GET",
+    example: "/avatars/user_12345",
+  },
+  // Profile Pictures - Protected
+  ...pfpCategories.map((cat) => ({
+    path: `/autopfp/pfp/${cat}`,
+    description: `Get profile pictures from the ${cat} category`,
     protected: true,
     method: "GET",
-    example: "/avatars/user_12345/avatar.png",
-  },
+    example: `/autopfp/pfp/${cat}`,
+  })),
   {
-    path: "/autopfp",
-    description: "Browse all auto profile pictures",
-    protected: false,
-    method: "GET",
-    example: "/autopfp/anime/sakura.gif",
-  },
-  {
-    path: "/autopfp/random",
+    path: "/autopfp/pfp/random",
     description: "Get a random profile picture from any category",
-    protected: false,
+    protected: true,
     method: "GET",
-    example: "/autopfp/random",
+    example: "/autopfp/pfp/random",
   },
-  {
-    path: "/autopfp/{category}/random",
-    description: "Get a random picture from a specific category",
-    protected: false,
+  // Banners - Protected
+  ...bannerCategories.map((cat) => ({
+    path: `/autopfp/banner/${cat}`,
+    description: `Get banners from the ${cat} category`,
+    protected: true,
     method: "GET",
-    example: "/autopfp/anime/random",
+    example: `/autopfp/banner/${cat}`,
+  })),
+  {
+    path: "/autopfp/banner/random",
+    description: "Get a random banner from any category",
+    protected: true,
+    method: "GET",
+    example: "/autopfp/banner/random",
   },
 ];
 
