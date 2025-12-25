@@ -111,9 +111,9 @@ export function ApiKeys() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6 animate-slide-in">
+      <div className="space-y-4 sm:space-y-6 animate-slide-in">
         <div>
-          <h2 className="text-2xl font-semibold text-foreground">API Keys</h2>
+          <h2 className="text-xl sm:text-2xl font-semibold text-foreground">API Keys</h2>
           <p className="text-sm text-muted-foreground mt-1">Loading...</p>
         </div>
       </div>

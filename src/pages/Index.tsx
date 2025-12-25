@@ -29,7 +29,7 @@ const Index = () => {
   return (
     <div className="flex h-screen bg-background">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-      <main className="flex-1 overflow-auto p-8">
+      <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8 pt-16 lg:pt-8">
         <div className="max-w-5xl mx-auto">
           {renderContent()}
         </div>

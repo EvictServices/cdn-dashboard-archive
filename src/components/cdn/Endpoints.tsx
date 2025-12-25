@@ -55,18 +55,18 @@ export function Endpoints() {
   };
 
   return (
-    <div className="space-y-6 animate-slide-in">
+    <div className="space-y-4 sm:space-y-6 animate-slide-in">
       <div>
-        <h2 className="text-2xl font-semibold text-foreground">CDN Endpoints</h2>
+        <h2 className="text-xl sm:text-2xl font-semibold text-foreground">CDN Endpoints</h2>
         <p className="text-sm text-muted-foreground mt-1">
           Available API endpoints for accessing your CDN
         </p>
       </div>
 
-      <div className="rounded-lg border border-border bg-card p-4">
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">Base URL:</span>
-          <code className="px-3 py-1.5 rounded-md bg-secondary font-mono text-sm text-primary">
+      <div className="rounded-lg border border-border bg-card p-3 sm:p-4 overflow-x-auto">
+        <div className="flex items-center gap-3 min-w-max">
+          <span className="text-xs sm:text-sm text-muted-foreground">Base URL:</span>
+          <code className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-md bg-secondary font-mono text-xs sm:text-sm text-primary">
             {baseUrl}
           </code>
         </div>
@@ -76,9 +76,9 @@ export function Endpoints() {
         {displayedEndpoints.map((endpoint) => (
           <div
             key={endpoint.path}
-            className="rounded-lg border border-border bg-card p-4 hover:border-primary/30 transition-colors"
+            className="rounded-lg border border-border bg-card p-3 sm:p-4 hover:border-primary/30 transition-colors"
           >
-            <div className="flex items-start justify-between mb-3">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-0 mb-3">
               <div className="flex items-center gap-3">
                 <span className="px-2 py-1 rounded text-xs font-mono font-medium bg-primary/10 text-primary">
                   {endpoint.method}

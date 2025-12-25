@@ -8,6 +8,7 @@ import authRouter from './routes/auth.js';
 import analyticsRouter from './routes/analytics.js';
 import cdnRouter from './routes/cdn.js';
 import filesRouter from './routes/files.js';
+import settingsRouter from './routes/settings.js';
 import { authenticateToken } from './middleware/auth.js';
 
 dotenv.config();
@@ -29,6 +30,7 @@ app.use('/cdn', cdnRouter);
 app.use('/api/keys', authenticateToken, apiKeysRouter);
 app.use('/api/analytics', authenticateToken, analyticsRouter);
 app.use('/api/files', filesRouter);
+app.use('/api/settings', settingsRouter);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });

@@ -106,9 +106,9 @@ export function Analytics() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6 animate-slide-in">
+      <div className="space-y-4 sm:space-y-6 animate-slide-in">
         <div>
-          <h2 className="text-2xl font-semibold text-foreground">Analytics</h2>
+          <h2 className="text-xl sm:text-2xl font-semibold text-foreground">Analytics</h2>
           <p className="text-sm text-muted-foreground mt-1">Loading...</p>
         </div>
       </div>
@@ -129,9 +129,9 @@ export function Analytics() {
   const totalStatusCodes = stats ? stats.status200 + stats.status304 + stats.status404 + stats.statusOther : 0;
 
   return (
-    <div className="space-y-6 animate-slide-in">
+    <div className="space-y-4 sm:space-y-6 animate-slide-in">
       <div>
-        <h2 className="text-2xl font-semibold text-foreground">Analytics</h2>
+        <h2 className="text-xl sm:text-2xl font-semibold text-foreground">Analytics</h2>
         <p className="text-sm text-muted-foreground mt-1">
           Monitor your CDN performance and usage
         </p>
