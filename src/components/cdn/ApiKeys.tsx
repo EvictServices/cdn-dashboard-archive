@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Key, Copy, Trash2, Plus, Eye, EyeOff, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,28 +12,39 @@ interface ApiKey {
   lastUsed: string | null;
 }
 
-const initialKeys: ApiKey[] = [
-  {
-    id: "1",
-    name: "Production",
-    key: "cdn_live_a1b2c3d4e5f6g7h8i9j0",
-    createdAt: "2024-01-15",
-    lastUsed: "2024-01-20",
-  },
-  {
-    id: "2",
-    name: "Development",
-    key: "cdn_test_x9y8z7w6v5u4t3s2r1q0",
-    createdAt: "2024-01-10",
-    lastUsed: null,
-  },
-];
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
 export function ApiKeys() {
-  const [keys, setKeys] = useState<ApiKey[]>(initialKeys);
+  const [keys, setKeys] = useState<ApiKey[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
   const [newKeyName, setNewKeyName] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchKeys();
+  }, []);
+
+  const fetchKeys = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`${API_BASE_URL}/keys`, {
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Failed to fetch API keys:', response.status, errorData);
+        throw new Error(errorData.error || "Failed to fetch API keys");
+      }
+      const data = await response.json();
+      setKeys(data);
+    } catch (error) {
+      console.error("Error fetching API keys:", error);
+      toast.error(`Failed to load API keys: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const toggleKeyVisibility = (id: string) => {
     setVisibleKeys((prev) => {
@@ -54,31 +65,60 @@ export function ApiKeys() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const deleteKey = (id: string) => {
-    setKeys((prev) => prev.filter((k) => k.id !== id));
-    toast.success("API key deleted");
+  const deleteKey = async (id: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/keys/${id}`, {
+        method: "DELETE",
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error("Failed to delete API key");
+      setKeys((prev) => prev.filter((k) => k.id !== id));
+      toast.success("API key deleted");
+    } catch (error) {
+      console.error("Error deleting API key:", error);
+      toast.error("Failed to delete API key");
+    }
   };
 
-  const createKey = () => {
+  const createKey = async () => {
     if (!newKeyName.trim()) {
       toast.error("Please enter a key name");
       return;
     }
-    const newKey: ApiKey = {
-      id: Date.now().toString(),
-      name: newKeyName,
-      key: `cdn_${Math.random().toString(36).slice(2, 22)}`,
-      createdAt: new Date().toISOString().split("T")[0],
-      lastUsed: null,
-    };
-    setKeys((prev) => [...prev, newKey]);
-    setNewKeyName("");
-    toast.success("API key created");
+    try {
+      const response = await fetch(`${API_BASE_URL}/keys`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: 'include',
+        body: JSON.stringify({ name: newKeyName }),
+      });
+      if (!response.ok) throw new Error("Failed to create API key");
+      const newKey = await response.json();
+      setKeys((prev) => [newKey, ...prev]);
+      setNewKeyName("");
+      toast.success("API key created");
+    } catch (error) {
+      console.error("Error creating API key:", error);
+      toast.error("Failed to create API key");
+    }
   };
 
   const maskKey = (key: string) => {
     return key.slice(0, 8) + "•".repeat(16) + key.slice(-4);
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6 animate-slide-in">
+        <div>
+          <h2 className="text-2xl font-semibold text-foreground">API Keys</h2>
+          <p className="text-sm text-muted-foreground mt-1">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-slide-in">
@@ -106,11 +146,17 @@ export function ApiKeys() {
       </div>
 
       <div className="space-y-3">
-        {keys.map((apiKey) => (
-          <div
-            key={apiKey.id}
-            className="rounded-lg border border-border bg-card p-4 hover:border-primary/30 transition-colors"
-          >
+        {keys.length === 0 ? (
+          <div className="text-center py-12 rounded-lg border border-border bg-card">
+            <Key className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">No API keys yet. Create one to get started.</p>
+          </div>
+        ) : (
+          keys.map((apiKey) => (
+            <div
+              key={apiKey.id}
+              className="rounded-lg border border-border bg-card p-4 hover:border-primary/30 transition-colors"
+            >
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
@@ -161,8 +207,9 @@ export function ApiKeys() {
                 )}
               </Button>
             </div>
-          </div>
-        ))}
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

@@ -36,7 +36,7 @@ export function Settings() {
               <Label htmlFor="base-url">Base URL</Label>
               <Input
                 id="base-url"
-                defaultValue="https://cdn.yoursite.com"
+                defaultValue="https://cdn.azron.net"
                 className="bg-secondary border-border font-mono"
               />
             </div>

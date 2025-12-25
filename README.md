@@ -1,73 +1,131 @@
-# Welcome to your Lovable project
+# CDN Dashboard
 
-## Project info
+A modern, full-featured CDN management dashboard with authentication, API key management, real-time analytics, and file serving capabilities.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Features
 
-## How can I edit this code?
+- 🔐 Secure authentication with JWT and bcrypt
+- 🔑 API key management with CRUD operations
+- 📊 Real-time analytics and statistics
+- 🗄️ PostgreSQL database backend
+- 🎨 Modern UI with Shadcn/UI components
+- 📈 Request tracking and monitoring
+- 📁 CDN file serving (avatars, profile pictures, banners)
+- 🎲 Random file selection from categories
+- 🔒 Protected and public endpoints
 
-There are several ways of editing your application.
+## Tech Stack
 
-**Use Lovable**
+### Frontend
+- React 18 with TypeScript
+- Vite build tool
+- TailwindCSS for styling
+- Shadcn/UI components
+- React Router for navigation
+- TanStack Query for data fetching
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+### Backend
+- Express.js with TypeScript
+- PostgreSQL database
+- JWT authentication
+- Bcrypt password hashing
+- File serving with authentication
 
-Changes made via Lovable will be committed automatically to this repo.
+## Quick Start
 
-**Use your preferred IDE**
+See [SETUP.md](SETUP.md) for complete setup instructions.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Prerequisites
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- Bun runtime or Node.js 18+
+- PostgreSQL 12+
 
-Follow these steps:
+### Installation
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
+```bash
+# Clone the repository
 git clone <YOUR_GIT_URL>
+cd cdn-new
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Install all dependencies
+cd src/api && bun install && cd ../..
+bun install
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Set up database (see SETUP.md)
+# Configure .env files (see SETUP.md)
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+# Option 1: Start with PM2 (recommended)
+npm install -g pm2
+pm2 start ecosystem.config.js
+
+# Option 2: Start manually
+# Terminal 1: cd src/api && bun run dev
+# Terminal 2: bun dev
 ```
 
-**Edit a file directly in GitHub**
+## Project Structure
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```
+cdn-new/
+├── src/
+│   ├── api/              # Backend Express API
+│   │   ├── routes/       # API endpoints
+│   │   ├── middleware/   # Authentication
+│   │   ├── sql/          # Database scripts
+│   │   └── index.ts      # Server entry
+│   ├── cdn-files/        # CDN file storage
+│   │   ├── avatars/      # User avatars (public)
+│   │   └── autopfp/      # Auto PFP files (protected)
+│   ├── public/           # Static frontend assets
+│   ├── components/       # React components
+│   ├── pages/            # React pages
+│   └── ...              # Other frontend code
+├── ecosystem.config.js   # PM2 configuration
+├── logs/                # Application logs
+└── SETUP.md             # Detailed setup guide
+```
 
-**Use GitHub Codespaces**
+## API Endpoints
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Authentication
+- `POST /api/auth/login` - User login
+- `POST /api/auth/logout` - User logout
+- `GET /api/auth/me` - Get current user
 
-## What technologies are used for this project?
+### API Keys (Protected)
+- `GET /api/keys` - List API keys
+- `POST /api/keys` - Create new API key
+- `DELETE /api/keys/:id` - Delete API key
 
-This project is built with:
+### Analytics (Protected)
+- `GET /api/analytics/stats` - Get statistics
+- `GET /api/analytics/recent` - Get recent requests
+- `GET /api/analytics/top-endpoints` - Get top endpoints
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### CDN Files
+- `GET /cdn/avatars/:userId` - Get user avatar (public)
+- `GET /cdn/autopfp/pfp/:category` - Get random profile picture (protected)
+- `GET /cdn/autopfp/banner/:category` - Get random banner (protected)
 
-## How can I deploy this project?
+## Development
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+```bash
+# Using PM2
+pm2 start ecosystem.config.js
+pm2 logs
+pm2 stop all
 
-## Can I connect a custom domain to my Lovable project?
+# Manual start
+# Frontend: bun dev
+# Backend: cd src/api && bun run dev
 
-Yes, you can!
+# Build frontend for production
+bun run build
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+# Preview production build
+bun run preview
+```
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## License
+
+MIT

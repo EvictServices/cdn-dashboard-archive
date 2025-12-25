@@ -11,54 +11,40 @@ interface Endpoint {
   example?: string;
 }
 
-const pfpCategories = ["anime", "cats", "egirls", "girls", "boys"];
-const bannerCategories = ["anime", "cute", "imsg"];
-
-const endpoints: Endpoint[] = [
-  // Avatars - Public
-  {
-    path: "/avatars/{userId}",
-    description: "Get all avatars in the folder for a specific user ID",
-    protected: false,
-    method: "GET",
-    example: "/avatars/user_12345",
-  },
-  // Profile Pictures - Protected
-  ...pfpCategories.map((cat) => ({
-    path: `/autopfp/pfp/${cat}`,
-    description: `Get profile pictures from the ${cat} category`,
-    protected: true,
-    method: "GET",
-    example: `/autopfp/pfp/${cat}`,
-  })),
-  {
-    path: "/autopfp/pfp/random",
-    description: "Get a random profile picture from any category",
-    protected: true,
-    method: "GET",
-    example: "/autopfp/pfp/random",
-  },
-  // Banners - Protected
-  ...bannerCategories.map((cat) => ({
-    path: `/autopfp/banner/${cat}`,
-    description: `Get banners from the ${cat} category`,
-    protected: true,
-    method: "GET",
-    example: `/autopfp/banner/${cat}`,
-  })),
-  {
-    path: "/autopfp/banner/random",
-    description: "Get a random banner from any category",
-    protected: true,
-    method: "GET",
-    example: "/autopfp/banner/random",
-  },
-];
-
-const baseUrl = "https://cdn.yoursite.com";
+const baseUrl = "http://localhost:3001/cdn";
 
 export function Endpoints() {
   const [copiedPath, setCopiedPath] = useState<string | null>(null);
+
+  const pfpCategories = ['anime', 'cats', 'egirls', 'girls', 'boys', 'random'];
+  
+  const bannerCategories = ['anime', 'cute', 'imsg', 'random'];
+
+  const endpoints: Endpoint[] = [
+    {
+      path: "/avatars/{userId}",
+      description: "Get user avatar by user ID (public access)",
+      protected: false,
+      method: "GET",
+      example: "/avatars/12345",
+    },
+    ...pfpCategories.map(category => ({
+      path: `/autopfp/pfp/${category}`,
+      description: `Get random ${category} profile picture${category === 'random' ? ' from any category' : ''}`,
+      protected: true,
+      method: "GET",
+      example: `/autopfp/pfp/${category}`,
+    })),
+    ...bannerCategories.map(category => ({
+      path: `/autopfp/banner/${category}`,
+      description: `Get random ${category} banner${category === 'random' ? ' from any category' : ''}`,
+      protected: true,
+      method: "GET",
+      example: `/autopfp/banner/${category}`,
+    })),
+  ];
+
+  const [displayedEndpoints] = useState<Endpoint[]>(endpoints);
 
   const copyEndpoint = async (path: string) => {
     const fullUrl = `${baseUrl}${path}`;
@@ -87,7 +73,7 @@ export function Endpoints() {
       </div>
 
       <div className="space-y-4">
-        {endpoints.map((endpoint) => (
+        {displayedEndpoints.map((endpoint) => (
           <div
             key={endpoint.path}
             className="rounded-lg border border-border bg-card p-4 hover:border-primary/30 transition-colors"
