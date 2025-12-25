@@ -6,6 +6,14 @@ export default defineConfig({
   server: {
     host: "::",
     port: 8080,
+    allowedHosts: ["localhost", "127.0.0.1", "cdnn.evict.bot"],
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        secure: false,
+      }
+    }
   },
   publicDir: "src/public",
   plugins: [react()],

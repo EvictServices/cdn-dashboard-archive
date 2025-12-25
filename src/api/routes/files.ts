@@ -2,9 +2,46 @@ import { Router, Request, Response } from 'express';
 import path from 'path';
 import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
+import multer from 'multer';
 import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
+
+const storage = multer.diskStorage({
+  destination: async (req, file, cb) => {
+    const { userId } = req.params;
+    const uploadDir = path.join(__dirname, '../../cdn-files/avatars', userId);
+    
+    try {
+      await fs.mkdir(uploadDir, { recursive: true });
+      cb(null, uploadDir);
+    } catch (error) {
+      cb(error as Error, uploadDir);
+    }
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, `avatar${ext}`);
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024,
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif|webp/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    
+    if (extname && mimetype) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
+});
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -158,6 +195,32 @@ router.delete('/file', authenticateToken, async (req: Request, res: Response) =>
   } catch (error) {
     console.error('Error deleting file:', error);
     res.status(500).json({ error: 'Failed to delete file' });
+  }
+});
+
+router.post('/upload/avatar/:userId', authenticateToken, upload.single('avatar'), async (req: Request, res: Response) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const { userId } = req.params;
+    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:8080';
+    const apiUrl = baseUrl.replace('8080', '3001');
+    const avatarUrl = `${apiUrl}/cdn/avatars/${userId}`;
+
+    res.json({
+      message: 'Avatar uploaded successfully',
+      url: avatarUrl,
+      file: {
+        name: req.file.filename,
+        size: req.file.size,
+        path: `avatars/${userId}/${req.file.filename}`
+      }
+    });
+  } catch (error) {
+    console.error('Error uploading avatar:', error);
+    res.status(500).json({ error: 'Failed to upload avatar' });
   }
 });
 
