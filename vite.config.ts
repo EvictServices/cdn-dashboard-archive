@@ -12,14 +12,31 @@ export default defineConfig({
         target: 'http://localhost:3001',
         changeOrigin: true,
         secure: false,
+      },
+      '/cdn': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        secure: false,
       }
-    }
+    },
+    historyApiFallback: true,
+  },
+  preview: {
+    port: 8080,
+    host: "::",
   },
   publicDir: "src/public",
   plugins: [react()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
     },
   },
 });

@@ -9,6 +9,7 @@ import analyticsRouter from './routes/analytics.js';
 import cdnRouter from './routes/cdn.js';
 import filesRouter from './routes/files.js';
 import settingsRouter from './routes/settings.js';
+import { roleplayApiRouter, roleplayCdnRouter } from './routes/roleplay.js';
 import { authenticateToken } from './middleware/auth.js';
 
 dotenv.config();
@@ -26,7 +27,9 @@ app.use(cookieParser());
 app.use('/api/auth', authRouter);
 
 app.use('/cdn', cdnRouter);
+app.use('/cdn/roleplay', roleplayCdnRouter);
 
+app.use('/api/roleplay', roleplayApiRouter);
 app.use('/api/keys', authenticateToken, apiKeysRouter);
 app.use('/api/analytics', authenticateToken, analyticsRouter);
 app.use('/api/files', filesRouter);

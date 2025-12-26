@@ -3,6 +3,7 @@ import { Folder, Key, Settings, BarChart3, Globe, LogOut, User, Menu, X } from "
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface SidebarProps {
   activeTab: string;
@@ -10,25 +11,25 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { id: "files", label: "Files", icon: Folder },
-  { id: "api-keys", label: "API Keys", icon: Key },
-  { id: "endpoints", label: "Endpoints", icon: Globe },
-  { id: "analytics", label: "Analytics", icon: BarChart3 },
-  { id: "settings", label: "Settings", icon: Settings },
+  { id: "files", label: "Files", icon: Folder, path: "/files" },
+  { id: "api-keys", label: "API Keys", icon: Key, path: "/api-keys" },
+  { id: "endpoints", label: "Endpoints", icon: Globe, path: "/endpoints" },
+  { id: "analytics", label: "Analytics", icon: BarChart3, path: "/analytics" },
+  { id: "settings", label: "Settings", icon: Settings, path: "/settings" },
 ];
 
 export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
-  const handleTabChange = (tab: string) => {
-    setActiveTab(tab);
+  const handleTabChange = (path: string) => {
+    navigate(path);
     setIsMobileMenuOpen(false);
   };
 
   return (
     <>
-      {/* Mobile menu button */}
       <button
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-card border border-border text-foreground"
@@ -36,7 +37,6 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
         {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
       </button>
 
-      {/* Mobile overlay */}
       {isMobileMenuOpen && (
         <div
           className="lg:hidden fixed inset-0 bg-black/50 z-30"
@@ -44,7 +44,6 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
         />
       )}
 
-      {/* Sidebar */}
       <aside className={cn(
         "w-64 border-r border-border bg-sidebar flex flex-col transition-transform duration-200 ease-in-out",
         "lg:relative lg:translate-x-0",
@@ -68,7 +67,7 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
           {navItems.map((item) => (
             <li key={item.id}>
               <button
-                onClick={() => handleTabChange(item.id)}
+                onClick={() => handleTabChange(item.path)}
                 className={cn(
                   "w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all",
                   activeTab === item.id

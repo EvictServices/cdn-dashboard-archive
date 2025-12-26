@@ -146,6 +146,13 @@ router.get('/file-url', authenticateToken, async (req: Request, res: Response) =
         const filename = parts[3];
         url = `${apiUrl}/cdn/autopfp/banner/${category}/${filename}`;
       }
+    } else if (filePath.startsWith('roleplay/')) {
+      const parts = filePath.split('/');
+      if (parts.length >= 3) {
+        const action = parts[1];
+        const filename = parts[2];
+        url = `${apiUrl}/cdn/roleplay/${action}/${filename}`;
+      }
     }
     
     if (!url) {

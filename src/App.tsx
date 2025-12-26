@@ -4,9 +4,14 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import Index from "./pages/Index";
 import { Login } from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import { DashboardLayout } from "@/components/layouts/DashboardLayout";
+import { FileBrowser } from "@/components/cdn/FileBrowser";
+import { ApiKeys } from "@/components/cdn/ApiKeys";
+import { Endpoints } from "@/components/cdn/Endpoints";
+import { Analytics } from "@/components/cdn/Analytics";
+import { Settings } from "@/components/cdn/Settings";
 
 const queryClient = new QueryClient();
 
@@ -58,7 +63,57 @@ const App = () => (
               path="/"
               element={
                 <ProtectedRoute>
-                  <Index />
+                  <Navigate to="/files" replace />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/files"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <FileBrowser />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/api-keys"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <ApiKeys />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/endpoints"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <Endpoints />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/analytics"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <Analytics />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <Settings />
+                  </DashboardLayout>
                 </ProtectedRoute>
               }
             />

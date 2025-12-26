@@ -11,14 +11,14 @@ interface Endpoint {
   example?: string;
 }
 
-const baseUrl = "http://localhost:3001/cdn";
+const baseUrl = "https://cdn.azron.net/api";
 
 export function Endpoints() {
   const [copiedPath, setCopiedPath] = useState<string | null>(null);
 
   const pfpCategories = ['anime', 'cats', 'egirls', 'girls', 'boys', 'random'];
-  
   const bannerCategories = ['anime', 'cute', 'imsg', 'random'];
+  const roleplayCategories = ['fuck']
 
   const endpoints: Endpoint[] = [
     {
@@ -42,16 +42,28 @@ export function Endpoints() {
       method: "GET",
       example: `/autopfp/banner/${category}`,
     })),
+    ...roleplayCategories.map(category => ({
+      path: `/roleplay/${category}`,
+      description: `Get random ${category} roleplay image`,
+      protected: true,
+      method: "GET",
+      example: `/roleplay/${category}`,
+    })),
   ];
 
   const [displayedEndpoints] = useState<Endpoint[]>(endpoints);
 
-  const copyEndpoint = async (path: string) => {
-    const fullUrl = `${baseUrl}${path}`;
-    await navigator.clipboard.writeText(fullUrl);
-    setCopiedPath(path);
-    toast.success("Endpoint copied to clipboard");
-    setTimeout(() => setCopiedPath(null), 2000);
+  const copyEndpoint = async (endpoint: Endpoint) => {
+    try {
+      const fullUrl = `${baseUrl}${endpoint.example || endpoint.path}`;
+      await navigator.clipboard.writeText(fullUrl);
+      setCopiedPath(endpoint.path);
+      toast.success("Endpoint copied to clipboard");
+      setTimeout(() => setCopiedPath(null), 2000);
+    } catch (error) {
+      console.error('Failed to copy:', error);
+      toast.error("Failed to copy endpoint");
+    }
   };
 
   return (
@@ -101,7 +113,7 @@ export function Endpoints() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => copyEndpoint(endpoint.example || endpoint.path)}
+                onClick={() => copyEndpoint(endpoint)}
               >
                 {copiedPath === endpoint.path ? (
                   <Check className="w-4 h-4 text-success" />
