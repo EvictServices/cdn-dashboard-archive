@@ -25,18 +25,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuth = async () => {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      
       const response = await fetch(`${API_BASE_URL}/auth/me`, {
         credentials: 'include',
+        signal: controller.signal,
       });
+      
+      clearTimeout(timeoutId);
+      
       if (response.ok) {
         const data = await response.json();
         setUser(data.user);
-      } else {
+      } else if (response.status === 401) {
         setUser(null);
       }
     } catch (error) {
-      console.error('Error checking auth:', error);
-      setUser(null);
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.warn('Auth check timed out - keeping current session');
+      } else {
+        console.error('Error checking auth:', error);
+      }
     } finally {
       setIsLoading(false);
     }

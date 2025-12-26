@@ -111,6 +111,7 @@ cdnRouter.get('/:action/:filename', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'File not found' });
     }
     
+    res.set('Cache-Control', 'public, max-age=31536000, immutable');
     res.sendFile(resolvedPath);
   } catch (error) {
     console.error('Error serving roleplay file:', error);

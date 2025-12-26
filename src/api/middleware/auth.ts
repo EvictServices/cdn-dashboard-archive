@@ -44,7 +44,6 @@ export async function authenticateApiKey(req: AuthRequest, res: Response, next: 
       return res.status(403).json({ error: 'Invalid API key' });
     }
 
-    // Update last_used timestamp
     await pool.query(
       'UPDATE api_keys SET last_used = CURRENT_TIMESTAMP WHERE id = $1',
       [result.rows[0].id]

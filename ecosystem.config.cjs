@@ -11,11 +11,13 @@ module.exports = {
       max_memory_restart: '1G',
       env: {
         NODE_ENV: 'development',
-        PORT: 3001
+        PORT: 3001,
+        CDN_URL: 'https://cdn.azron.net'
       },
       env_production: {
         NODE_ENV: 'production',
-        PORT: 3001
+        PORT: 3001,
+        CDN_URL: 'https://cdn.azron.net'
       },
       error_file: './logs/api-error.log',
       out_file: './logs/api-out.log',

@@ -69,6 +69,7 @@ router.get('/avatars/:userId', async (req: Request, res: Response) => {
     }
     
     const filePath = path.join(avatarPath, imageFile);
+    res.set('Cache-Control', 'public, max-age=31536000, immutable');
     res.sendFile(filePath);
   } catch (error) {
     console.error('Error serving avatar:', error);
@@ -129,6 +130,7 @@ router.get('/autopfp/banner/:category', authenticateToken, async (req: Request, 
       return res.status(404).json({ error: 'No images found' });
     }
     
+    res.set('Cache-Control', 'public, max-age=31536000, immutable');
     res.sendFile(filePath);
   } catch (error) {
     console.error('Error serving banner:', error);
@@ -169,6 +171,7 @@ router.get('/autopfp/:type/:category/:filename', async (req: Request, res: Respo
       return res.status(404).json({ error: 'File not found' });
     }
     
+    res.set('Cache-Control', 'public, max-age=31536000, immutable');
     res.sendFile(resolvedPath);
   } catch (error) {
     console.error('Error serving file:', error);

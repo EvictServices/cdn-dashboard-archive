@@ -4,7 +4,6 @@ import { authenticateToken, AuthRequest } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Get user settings
 router.get('/', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const result = await pool.query(

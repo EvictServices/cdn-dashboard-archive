@@ -123,35 +123,34 @@ router.get('/file-url', authenticateToken, async (req: Request, res: Response) =
     }
     
     let url = '';
-    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:8080';
-    const apiUrl = baseUrl.replace('8080', '3001');
+    const cdnUrl = process.env.CDN_URL || 'https://cdn.azron.net';
     
     if (filePath.startsWith('avatars/')) {
       const parts = filePath.split('/');
       if (parts.length >= 2) {
         const userId = parts[1];
-        url = `${apiUrl}/cdn/avatars/${userId}`;
+        url = `${cdnUrl}/cdn/avatars/${userId}`;
       }
     } else if (filePath.startsWith('autopfp/pfp/')) {
       const parts = filePath.split('/');
       if (parts.length >= 4) {
         const category = parts[2];
         const filename = parts[3];
-        url = `${apiUrl}/cdn/autopfp/pfp/${category}/${filename}`;
+        url = `${cdnUrl}/cdn/autopfp/pfp/${category}/${filename}`;
       }
     } else if (filePath.startsWith('autopfp/banner/')) {
       const parts = filePath.split('/');
       if (parts.length >= 4) {
         const category = parts[2];
         const filename = parts[3];
-        url = `${apiUrl}/cdn/autopfp/banner/${category}/${filename}`;
+        url = `${cdnUrl}/cdn/autopfp/banner/${category}/${filename}`;
       }
     } else if (filePath.startsWith('roleplay/')) {
       const parts = filePath.split('/');
       if (parts.length >= 3) {
         const action = parts[1];
         const filename = parts[2];
-        url = `${apiUrl}/cdn/roleplay/${action}/${filename}`;
+        url = `${cdnUrl}/cdn/roleplay/${action}/${filename}`;
       }
     }
     
@@ -212,9 +211,8 @@ router.post('/upload/avatar/:userId', authenticateToken, upload.single('avatar')
     }
 
     const { userId } = req.params;
-    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:8080';
-    const apiUrl = baseUrl.replace('8080', '3001');
-    const avatarUrl = `${apiUrl}/cdn/avatars/${userId}`;
+    const cdnUrl = process.env.CDN_URL || 'https://cdn.azron.net';
+    const avatarUrl = `${cdnUrl}/cdn/avatars/${userId}`;
 
     res.json({
       message: 'Avatar uploaded successfully',

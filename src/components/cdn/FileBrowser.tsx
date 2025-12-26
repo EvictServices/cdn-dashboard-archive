@@ -125,9 +125,15 @@ export function FileBrowser() {
   const fetchFiles = async () => {
     setLoading(true);
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      
       const response = await fetch(`${import.meta.env.VITE_API_URL}/files/files`, {
         credentials: "include",
+        signal: controller.signal,
       });
+      
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
@@ -138,8 +144,14 @@ export function FileBrowser() {
       const data = await response.json();
       setFileTree(data.files || []);
     } catch (error) {
-      console.error("Error fetching files:", error);
-      toast.error(`Failed to load files: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      if (error instanceof Error && error.name === 'AbortError') {
+        toast.error('Request timed out. Server may be offline.');
+      } else if (error instanceof TypeError && error.message.includes('fetch')) {
+        toast.error('Cannot connect to server. Please check your connection.');
+      } else {
+        console.error("Error fetching files:", error);
+        toast.error(`Failed to load files: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -151,10 +163,15 @@ export function FileBrowser() {
 
   const handleCopyUrl = async (filePath: string) => {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/files/file-url?path=${encodeURIComponent(filePath)}`,
-        { credentials: "include" }
+        { credentials: "include", signal: controller.signal }
       );
+      
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
         throw new Error("Failed to get file URL");
@@ -166,17 +183,26 @@ export function FileBrowser() {
       toast.success("URL copied to clipboard");
       setTimeout(() => setCopiedPath(null), 2000);
     } catch (error) {
-      console.error("Error copying URL:", error);
-      toast.error("Failed to copy URL");
+      if (error instanceof Error && error.name === 'AbortError') {
+        toast.error('Request timed out. Server may be offline.');
+      } else {
+        console.error("Error copying URL:", error);
+        toast.error("Failed to copy URL");
+      }
     }
   };
 
   const handlePreview = async (filePath: string, name: string) => {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/files/file-url?path=${encodeURIComponent(filePath)}`,
-        { credentials: "include" }
+        { credentials: "include", signal: controller.signal }
       );
+      
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
         throw new Error("Failed to get file URL");
@@ -185,8 +211,12 @@ export function FileBrowser() {
       const data = await response.json();
       setPreviewImage({ url: data.url, name, path: filePath });
     } catch (error) {
-      console.error("Error getting preview URL:", error);
-      toast.error("Failed to preview image");
+      if (error instanceof Error && error.name === 'AbortError') {
+        toast.error('Request timed out. Server may be offline.');
+      } else {
+        console.error("Error getting preview URL:", error);
+        toast.error("Failed to preview image");
+      }
     }
   };
 
@@ -194,13 +224,19 @@ export function FileBrowser() {
     if (!previewImage) return;
     
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/files/file?path=${encodeURIComponent(previewImage.path)}`,
         { 
           method: "DELETE",
-          credentials: "include" 
+          credentials: "include",
+          signal: controller.signal
         }
       );
+      
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
         throw new Error("Failed to delete file");
@@ -209,10 +245,14 @@ export function FileBrowser() {
       toast.success("File deleted successfully");
       setPreviewImage(null);
       setDeleteConfirm(false);
-      fetchFiles(); // Refresh file list
+      fetchFiles();
     } catch (error) {
-      console.error("Error deleting file:", error);
-      toast.error("Failed to delete file");
+      if (error instanceof Error && error.name === 'AbortError') {
+        toast.error('Request timed out. Server may be offline.');
+      } else {
+        console.error("Error deleting file:", error);
+        toast.error("Failed to delete file");
+      }
     }
   };
 

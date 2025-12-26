@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     host: "::",
     port: 8080,
-    allowedHosts: ["localhost", "127.0.0.1", "cdnn.evict.bot"],
+    allowedHosts: ["localhost", "127.0.0.1", "cdn.azron.net"],
     proxy: {
       '/api': {
         target: 'http://localhost:3001',
@@ -19,7 +19,6 @@ export default defineConfig({
         secure: false,
       }
     },
-    historyApiFallback: true,
   },
   preview: {
     port: 8080,
