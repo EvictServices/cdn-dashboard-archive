@@ -41,7 +41,7 @@ async function getRandomFile(directory: string): Promise<string | null> {
 apiRouter.get('/:action', authenticateApiKey, async (req: Request, res: Response) => {
   try {
     const { action } = req.params;
-    const validActions = ['fuck'];
+    const validActions = ['fuck', 'spank', 'nutkick'];
     
     if (!validActions.includes(action)) {
       return res.status(400).json({ error: 'Invalid action' });
@@ -75,7 +75,7 @@ apiRouter.get('/:action', authenticateApiKey, async (req: Request, res: Response
 cdnRouter.get('/:action/:filename', async (req: Request, res: Response) => {
   try {
     const { action, filename } = req.params;
-    const validActions = ['fuck'];
+    const validActions = ['fuck', 'spank', 'nutkick'];
     
     if (!validActions.includes(action)) {
       return res.status(400).json({ error: 'Invalid action' });

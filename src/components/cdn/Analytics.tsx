@@ -32,6 +32,16 @@ interface TopEndpoint {
   requests: string;
 }
 
+interface TopIP {
+  ip: string;
+  requests: string;
+}
+
+interface TopFile {
+  path: string;
+  requests: string;
+}
+
 interface StatCardProps {
   title: string;
   value: string;
@@ -65,6 +75,8 @@ export function Analytics() {
   const [changes, setChanges] = useState<Changes | null>(null);
   const [recentRequests, setRecentRequests] = useState<RecentRequest[]>([]);
   const [topEndpoints, setTopEndpoints] = useState<TopEndpoint[]>([]);
+  const [topIPs, setTopIPs] = useState<TopIP[]>([]);
+  const [topFiles, setTopFiles] = useState<TopFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -75,10 +87,12 @@ export function Analytics() {
     try {
       setIsLoading(true);
       
-      const [statsRes, recentRes, topEndpointsRes] = await Promise.all([
+      const [statsRes, recentRes, topEndpointsRes, topIPsRes, topFilesRes] = await Promise.all([
         fetch(`${API_BASE_URL}/analytics/stats`, { credentials: 'include' }),
         fetch(`${API_BASE_URL}/analytics/recent`, { credentials: 'include' }),
         fetch(`${API_BASE_URL}/analytics/top-endpoints`, { credentials: 'include' }),
+        fetch(`${API_BASE_URL}/analytics/top-ips`, { credentials: 'include' }),
+        fetch(`${API_BASE_URL}/analytics/top-files`, { credentials: 'include' }),
       ]);
 
       if (statsRes.ok) {
@@ -95,6 +109,16 @@ export function Analytics() {
       if (topEndpointsRes.ok) {
         const topData = await topEndpointsRes.json();
         setTopEndpoints(topData);
+      }
+
+      if (topIPsRes.ok) {
+        const topIPsData = await topIPsRes.json();
+        setTopIPs(topIPsData);
+      }
+
+      if (topFilesRes.ok) {
+        const topFilesData = await topFilesRes.json();
+        setTopFiles(topFilesData);
       }
     } catch (error) {
       console.error('Error fetching analytics:', error);
@@ -232,6 +256,40 @@ export function Analytics() {
               </span>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="rounded-lg border border-border bg-card p-4">
+          <h3 className="text-sm font-medium text-foreground mb-4">Top IP Addresses</h3>
+          <div className="space-y-3">
+            {topIPs.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No data available</p>
+            ) : (
+              topIPs.slice(0, 5).map((item, idx) => (
+                <div key={idx} className="flex items-center justify-between">
+                  <code className="font-mono text-sm text-foreground truncate">{item.ip}</code>
+                  <span className="text-sm text-muted-foreground ml-2">{item.requests}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-border bg-card p-4">
+        <h3 className="text-sm font-medium text-foreground mb-4">Most Accessed Files</h3>
+        <div className="space-y-3">
+          {topFiles.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No data available</p>
+          ) : (
+            topFiles.slice(0, 10).map((item, idx) => (
+              <div key={idx} className="flex items-center justify-between">
+                <code className="font-mono text-sm text-foreground truncate">{item.path}</code>
+                <span className="text-sm text-muted-foreground ml-2">{item.requests}</span>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

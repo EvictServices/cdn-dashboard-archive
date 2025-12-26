@@ -115,6 +115,54 @@ router.get('/top-endpoints', async (req, res) => {
   }
 });
 
+router.get('/top-ips', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT ip_address, COUNT(*) as count 
+       FROM analytics_requests 
+       WHERE created_at >= NOW() - INTERVAL '24 hours'
+       AND ip_address IS NOT NULL
+       GROUP BY ip_address 
+       ORDER BY count DESC 
+       LIMIT 10`
+    );
+
+    const ips = result.rows.map(row => ({
+      ip: row.ip_address,
+      requests: formatNumber(parseInt(row.count)),
+    }));
+
+    res.json(ips);
+  } catch (error) {
+    console.error('Error fetching top IPs:', error);
+    res.status(500).json({ error: 'Failed to fetch top IPs' });
+  }
+});
+
+router.get('/top-files', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT path, COUNT(*) as count 
+       FROM analytics_requests 
+       WHERE created_at >= NOW() - INTERVAL '24 hours'
+       AND request_type = 'cdn'
+       GROUP BY path 
+       ORDER BY count DESC 
+       LIMIT 10`
+    );
+
+    const files = result.rows.map(row => ({
+      path: row.path,
+      requests: formatNumber(parseInt(row.count)),
+    }));
+
+    res.json(files);
+  } catch (error) {
+    console.error('Error fetching top files:', error);
+    res.status(500).json({ error: 'Failed to fetch top files' });
+  }
+});
+
 router.post('/log', async (req, res) => {
   const { path, statusCode, responseTime, userAgent, ipAddress } = req.body;
 

@@ -18,7 +18,7 @@ export function Endpoints() {
 
   const pfpCategories = ['anime', 'cats', 'egirls', 'girls', 'boys', 'random'];
   const bannerCategories = ['anime', 'cute', 'imsg', 'random'];
-  const roleplayCategories = ['fuck']
+  const roleplayCategories = ['fuck', 'spank', 'nutkick']
 
   const endpoints: Endpoint[] = [
     {

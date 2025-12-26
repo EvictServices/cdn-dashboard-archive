@@ -11,11 +11,15 @@ import filesRouter from './routes/files.js';
 import settingsRouter from './routes/settings.js';
 import { roleplayApiRouter, roleplayCdnRouter } from './routes/roleplay.js';
 import { authenticateToken } from './middleware/auth.js';
+import { logApiUsage } from './middleware/apiAnalytics.js';
+import { logCdnAccess } from './middleware/cdnAnalytics.js';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+app.set('trust proxy', true);
 
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:8080',
@@ -26,10 +30,10 @@ app.use(cookieParser());
 
 app.use('/api/auth', authRouter);
 
-app.use('/cdn', cdnRouter);
-app.use('/cdn/roleplay', roleplayCdnRouter);
+app.use('/cdn', logCdnAccess, cdnRouter);
+app.use('/cdn/roleplay', logCdnAccess, roleplayCdnRouter);
 
-app.use('/api/roleplay', roleplayApiRouter);
+app.use('/api/roleplay', logApiUsage, roleplayApiRouter);
 app.use('/api/keys', authenticateToken, apiKeysRouter);
 app.use('/api/analytics', authenticateToken, analyticsRouter);
 app.use('/api/files', filesRouter);
