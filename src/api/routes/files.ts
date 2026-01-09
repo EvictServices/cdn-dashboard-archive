@@ -233,6 +233,60 @@ router.delete('/file', authenticateToken, async (req: Request, res: Response) =>
   }
 });
 
+router.delete('/avatars/:bot/:userId', authenticateApiKey, async (req: Request, res: Response) => {
+  try {
+    const { bot, userId } = req.params;
+    const validBots = ['evict', 'rival'];
+    
+    if (!validBots.includes(bot)) {
+      return res.status(400).json({ error: 'Invalid bot. Must be evict or rival' });
+    }
+    
+    const userDir = path.join(CDN_FILES_DIR, 'avatars', bot, userId);
+    
+    const resolvedPath = path.resolve(userDir);
+    const resolvedBase = path.resolve(CDN_FILES_DIR);
+    
+    if (!resolvedPath.startsWith(resolvedBase)) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    
+    try {
+      const stats = await fs.stat(userDir);
+      if (!stats.isDirectory()) {
+        return res.status(404).json({ error: 'User directory not found' });
+      }
+    } catch (error) {
+      return res.status(404).json({ error: 'User directory not found' });
+    }
+    
+    const files = await fs.readdir(userDir);
+    let deletedCount = 0;
+    
+    for (const file of files) {
+      const filePath = path.join(userDir, file);
+      const fileStats = await fs.stat(filePath);
+      
+      if (fileStats.isFile()) {
+        await fs.unlink(filePath);
+        deletedCount++;
+      }
+    }
+    
+    if (deletedCount > 0) {
+      await fs.rmdir(userDir);
+    }
+    
+    res.json({ 
+      message: 'Avatar history deleted successfully',
+      deleted_files: deletedCount
+    });
+  } catch (error) {
+    console.error('Error deleting avatar history:', error);
+    res.status(500).json({ error: 'Failed to delete avatar history' });
+  }
+});
+
 
 const apiUploadStorage = multer.diskStorage({
   destination: async (req, file, cb) => {
