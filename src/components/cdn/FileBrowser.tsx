@@ -34,10 +34,13 @@ interface FolderItemProps {
   depth?: number;
   onCopyUrl: (path: string) => void;
   onPreview: (path: string, name: string) => void;
+  onLoadChildren: (path: string) => Promise<FileNode[]>;
 }
 
-function FolderItem({ node, depth = 0, onCopyUrl, onPreview }: FolderItemProps) {
-  const [isOpen, setIsOpen] = useState(depth === 0);
+function FolderItem({ node, depth = 0, onCopyUrl, onPreview, onLoadChildren }: FolderItemProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [children, setChildren] = useState<FileNode[]>(node.children || []);
   const isFolder = node.type === "folder";
 
   const formatFileSize = (bytes?: number) => {
@@ -47,6 +50,23 @@ function FolderItem({ node, depth = 0, onCopyUrl, onPreview }: FolderItemProps) 
     const sizes = ["B", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
+  };
+
+  const handleToggle = async () => {
+    if (!isFolder) return;
+    
+    if (!isOpen && children.length === 0) {
+      setIsLoading(true);
+      try {
+        const loadedChildren = await onLoadChildren(node.path);
+        setChildren(loadedChildren);
+      } catch (error) {
+        console.error("Failed to load children:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    setIsOpen(!isOpen);
   };
 
   return (
@@ -61,7 +81,7 @@ function FolderItem({ node, depth = 0, onCopyUrl, onPreview }: FolderItemProps) 
         <button
           onClick={() => {
             if (isFolder) {
-              setIsOpen(!isOpen);
+              handleToggle();
             } else {
               onPreview(node.path, node.name);
             }
@@ -69,12 +89,16 @@ function FolderItem({ node, depth = 0, onCopyUrl, onPreview }: FolderItemProps) 
           className="flex items-center gap-2 flex-1 text-left"
         >
           {isFolder && (
-            <ChevronRight
-              className={cn(
-                "w-4 h-4 text-muted-foreground transition-transform",
-                isOpen && "rotate-90"
-              )}
-            />
+            isLoading ? (
+              <RefreshCw className="w-4 h-4 text-muted-foreground animate-spin" />
+            ) : (
+              <ChevronRight
+                className={cn(
+                  "w-4 h-4 text-muted-foreground transition-transform",
+                  isOpen && "rotate-90"
+                )}
+              />
+            )
           )}
           {isFolder ? (
             <Folder className="w-4 h-4 text-primary" />
@@ -104,10 +128,17 @@ function FolderItem({ node, depth = 0, onCopyUrl, onPreview }: FolderItemProps) 
           </Button>
         )}
       </div>
-      {isFolder && isOpen && node.children && (
+      {isFolder && isOpen && children.length > 0 && (
         <div>
-          {node.children.map((child, idx) => (
-            <FolderItem key={idx} node={child} depth={depth + 1} onCopyUrl={onCopyUrl} onPreview={onPreview} />
+          {children.map((child, idx) => (
+            <FolderItem 
+              key={idx} 
+              node={child} 
+              depth={depth + 1} 
+              onCopyUrl={onCopyUrl} 
+              onPreview={onPreview}
+              onLoadChildren={onLoadChildren}
+            />
           ))}
         </div>
       )}
@@ -160,6 +191,34 @@ export function FileBrowser() {
   useEffect(() => {
     fetchFiles();
   }, []);
+
+  const loadChildren = async (folderPath: string): Promise<FileNode[]> => {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/files/files?path=${encodeURIComponent(folderPath)}`,
+        {
+          credentials: "include",
+          signal: controller.signal,
+        }
+      );
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error("Failed to load folder contents");
+      }
+      
+      const data = await response.json();
+      return data.files || [];
+    } catch (error) {
+      console.error("Error loading folder:", error);
+      toast.error("Failed to load folder contents");
+      return [];
+    }
+  };
 
   const handleCopyUrl = async (filePath: string) => {
     try {
@@ -363,7 +422,13 @@ export function FileBrowser() {
             </div>
           ) : (
             fileTree.map((node, idx) => (
-              <FolderItem key={idx} node={node} onCopyUrl={handleCopyUrl} onPreview={handlePreview} />
+              <FolderItem 
+                key={idx} 
+                node={node} 
+                onCopyUrl={handleCopyUrl} 
+                onPreview={handlePreview}
+                onLoadChildren={loadChildren}
+              />
             ))
           )}
         </div>

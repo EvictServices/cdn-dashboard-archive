@@ -66,7 +66,7 @@ function formatFileSize(bytes: number): string {
   return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
 }
 
-async function buildFileTree(dirPath: string, relativePath: string = ''): Promise<FileNode[]> {
+async function buildFileTree(dirPath: string, relativePath: string = '', depth: number = 0, maxDepth: number = 1): Promise<FileNode[]> {
   const items: FileNode[] = [];
   
   try {
@@ -77,7 +77,13 @@ async function buildFileTree(dirPath: string, relativePath: string = ''): Promis
       const relPath = path.join(relativePath, entry.name);
       
       if (entry.isDirectory()) {
-        const children = await buildFileTree(fullPath, relPath);
+        let children: FileNode[] | undefined = undefined;
+        
+        // Only load children if we haven't reached max depth
+        if (depth < maxDepth) {
+          children = await buildFileTree(fullPath, relPath, depth + 1, maxDepth);
+        }
+        
         items.push({
           name: entry.name,
           type: 'folder',
@@ -107,7 +113,28 @@ async function buildFileTree(dirPath: string, relativePath: string = ''): Promis
 
 router.get('/files', authenticateToken, async (req: Request, res: Response) => {
   try {
-    const fileTree = await buildFileTree(CDN_FILES_DIR);
+    const { path: requestedPath } = req.query;
+    
+    if (requestedPath && typeof requestedPath === 'string') {
+      // Load specific directory
+      if (requestedPath.includes('..') || path.isAbsolute(requestedPath)) {
+        return res.status(403).json({ error: 'Invalid path' });
+      }
+      
+      const fullPath = path.join(CDN_FILES_DIR, requestedPath);
+      const resolvedPath = path.resolve(fullPath);
+      const resolvedBase = path.resolve(CDN_FILES_DIR);
+      
+      if (!resolvedPath.startsWith(resolvedBase)) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+      
+      const children = await buildFileTree(fullPath, requestedPath, 0, 0);
+      return res.json({ files: children });
+    }
+    
+    // Load root level only
+    const fileTree = await buildFileTree(CDN_FILES_DIR, '', 0, 0);
     res.json({ files: fileTree });
   } catch (error) {
     console.error('Error building file tree:', error);
