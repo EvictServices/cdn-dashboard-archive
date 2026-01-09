@@ -45,10 +45,16 @@ async function getRandomFileFromCategories(categories: string[], type: 'pfp' | '
   return allFiles[Math.floor(Math.random() * allFiles.length)];
 }
 
-router.get('/avatars/:userId', async (req: Request, res: Response) => {
+router.get('/avatars/:bot/:userId', async (req: Request, res: Response) => {
   try {
-    const { userId } = req.params;
-    const avatarPath = path.join(CDN_FILES_DIR, 'avatars', userId);
+    const { bot, userId } = req.params;
+    const validBots = ['evict', 'rival'];
+    
+    if (!validBots.includes(bot)) {
+      return res.status(400).json({ error: 'Invalid bot. Must be evict or rival' });
+    }
+    
+    const avatarPath = path.join(CDN_FILES_DIR, 'avatars', bot, userId);
     
     try {
       const stats = await fs.stat(avatarPath);
@@ -60,20 +66,58 @@ router.get('/avatars/:userId', async (req: Request, res: Response) => {
     }
     
     const files = await fs.readdir(avatarPath);
-    const imageFile = files.find(file => 
+    const imageFiles = files.filter(file => 
       /\.(jpg|jpeg|png|gif|webp)$/i.test(file)
     );
     
-    if (!imageFile) {
-      return res.status(404).json({ error: 'Avatar not found' });
+    if (imageFiles.length === 0) {
+      return res.status(404).json({ error: 'No avatars found' });
     }
     
-    const filePath = path.join(avatarPath, imageFile);
-    res.set('Cache-Control', 'public, max-age=31536000, immutable');
-    res.sendFile(filePath);
+    const baseUrl = 'https://cdn.azron.net';
+    const avatarUrls = imageFiles.map(file => 
+      `${baseUrl}/api/cdn/avatars/${bot}/${userId}/${file}`
+    );
+    
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.json({ avatars: avatarUrls });
   } catch (error) {
-    console.error('Error serving avatar:', error);
-    res.status(500).json({ error: 'Failed to serve avatar' });
+    console.error('Error serving avatar list:', error);
+    res.status(500).json({ error: 'Failed to serve avatar list' });
+  }
+});
+
+router.get('/avatars/:bot/:userId/:filename', async (req: Request, res: Response) => {
+  try {
+    const { bot, userId, filename } = req.params;
+    const validBots = ['evict', 'rival'];
+    
+    if (!validBots.includes(bot)) {
+      return res.status(400).json({ error: 'Invalid bot. Must be evict or rival' });
+    }
+    
+    const filePath = path.join(CDN_FILES_DIR, 'avatars', bot, userId, filename);
+    
+    const resolvedPath = path.resolve(filePath);
+    const resolvedBase = path.resolve(CDN_FILES_DIR);
+    if (!resolvedPath.startsWith(resolvedBase)) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    
+    try {
+      const stats = await fs.stat(filePath);
+      if (!stats.isFile()) {
+        return res.status(404).json({ error: 'File not found' });
+      }
+    } catch {
+      return res.status(404).json({ error: 'File not found' });
+    }
+    
+    res.set('Cache-Control', 'public, max-age=31536000, immutable');
+    res.sendFile(resolvedPath);
+  } catch (error) {
+    console.error('Error serving avatar file:', error);
+    res.status(500).json({ error: 'Failed to serve avatar file' });
   }
 });
 

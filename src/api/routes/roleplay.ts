@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import path from 'path';
 import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
-import { authenticateApiKey } from '../middleware/auth.js';
+import { authenticateApiKey, authenticateToken } from '../middleware/auth.js';
 import crypto from 'crypto';
 
 const apiRouter = Router();
@@ -81,6 +81,32 @@ cdnRouter.get('/:action/:filename', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid action' });
     }
     
+    if (!filename.match(/^[a-f0-9]{32}\./)) {
+      return authenticateToken(req, res, async () => {
+        const filePath = path.join(CDN_FILES_DIR, 'roleplay', action, filename);
+        
+        const resolvedPath = path.resolve(filePath);
+        const resolvedBase = path.resolve(CDN_FILES_DIR);
+        if (!resolvedPath.startsWith(resolvedBase)) {
+          return res.status(403).json({ error: 'Access denied' });
+        }
+        
+        try {
+          const stats = await fs.stat(filePath);
+          if (!stats.isFile()) {
+            return res.status(404).json({ error: 'File not found' });
+          }
+        } catch {
+          return res.status(404).json({ error: 'File not found' });
+        }
+        
+        res.set('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+        res.set('Pragma', 'no-cache');
+        res.set('Expires', '0');
+        return res.sendFile(resolvedPath);
+      });
+    }
+  
     const token = path.parse(filename).name;
     
     const tokenData = fileTokens.get(token);

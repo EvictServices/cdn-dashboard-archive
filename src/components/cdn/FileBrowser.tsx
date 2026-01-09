@@ -285,6 +285,7 @@ export function FileBrowser() {
               src={previewImage?.url}
               alt={previewImage?.name}
               className="max-h-[70vh] w-auto object-contain rounded"
+              loading="eager"
             />
           </div>
           <div className="flex justify-between gap-2">

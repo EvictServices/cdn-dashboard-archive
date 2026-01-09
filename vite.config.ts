@@ -7,6 +7,9 @@ export default defineConfig({
     host: "::",
     port: 8080,
     allowedHosts: ["localhost", "127.0.0.1", "cdn.azron.net"],
+    watch: {
+      ignored: ['**/cdn-files/**', '**/logs/**']
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:3001',

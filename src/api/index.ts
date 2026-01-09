@@ -31,7 +31,9 @@ app.use(cookieParser());
 app.use('/api/auth', authRouter);
 
 app.use('/cdn', logCdnAccess, cdnRouter);
+app.use('/api/cdn', logCdnAccess, cdnRouter);
 app.use('/cdn/roleplay', logCdnAccess, roleplayCdnRouter);
+app.use('/api/cdn/roleplay', logCdnAccess, roleplayCdnRouter);
 
 app.use('/api/roleplay', logApiUsage, roleplayApiRouter);
 app.use('/api/keys', authenticateToken, apiKeysRouter);

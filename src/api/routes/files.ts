@@ -3,7 +3,8 @@ import path from 'path';
 import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
-import { authenticateToken } from '../middleware/auth';
+import crypto from 'crypto';
+import { authenticateToken, authenticateApiKey } from '../middleware/auth';
 
 const router = Router();
 
@@ -127,9 +128,10 @@ router.get('/file-url', authenticateToken, async (req: Request, res: Response) =
     
     if (filePath.startsWith('avatars/')) {
       const parts = filePath.split('/');
-      if (parts.length >= 2) {
+      if (parts.length >= 3) {
         const userId = parts[1];
-        url = `${cdnUrl}/cdn/avatars/${userId}`;
+        const filename = parts.slice(2).join('/');
+        url = `${cdnUrl}/cdn/avatars/${userId}/${filename}`;
       }
     } else if (filePath.startsWith('autopfp/pfp/')) {
       const parts = filePath.split('/');
@@ -150,7 +152,7 @@ router.get('/file-url', authenticateToken, async (req: Request, res: Response) =
       if (parts.length >= 3) {
         const action = parts[1];
         const filename = parts[2];
-        url = `${cdnUrl}/cdn/roleplay/${action}/${filename}`;
+        url = `${cdnUrl}/api/cdn/roleplay/${action}/${filename}`;
       }
     }
     
@@ -201,6 +203,74 @@ router.delete('/file', authenticateToken, async (req: Request, res: Response) =>
   } catch (error) {
     console.error('Error deleting file:', error);
     res.status(500).json({ error: 'Failed to delete file' });
+  }
+});
+
+
+const apiUploadStorage = multer.diskStorage({
+  destination: async (req, file, cb) => {
+    const { bot, userId } = req.params;
+    const uploadDir = path.join(__dirname, '../../cdn-files/avatars', bot, userId);
+    
+    try {
+      await fs.mkdir(uploadDir, { recursive: true });
+      cb(null, uploadDir);
+    } catch (error) {
+      cb(error as Error, uploadDir);
+    }
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname);
+  }
+});
+
+const apiUpload = multer({
+  storage: apiUploadStorage,
+  limits: {
+    fileSize: 10 * 1024 * 1024,
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif|webp/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    
+    if (extname && mimetype) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
+});
+
+router.post('/upload/avatar/:bot/:userId', authenticateApiKey, apiUpload.single('avatar'), async (req: Request, res: Response) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const { bot, userId } = req.params;
+    const validBots = ['evict', 'rival'];
+    
+    if (!validBots.includes(bot)) {
+      await fs.unlink(req.file.path).catch(() => {});
+      return res.status(400).json({ error: 'Invalid bot. Must be evict or rival' });
+    }
+
+    const cdnUrl = process.env.CDN_URL || 'https://cdn.azron.net';
+    const avatarUrl = `${cdnUrl}/api/cdn/avatars/${bot}/${userId}/${req.file.filename}`;
+
+    res.json({
+      message: 'Avatar uploaded successfully',
+      url: avatarUrl,
+      file: {
+        name: req.file.filename,
+        size: req.file.size,
+        path: `avatars/${bot}/${userId}/${req.file.filename}`
+      }
+    });
+  } catch (error) {
+    console.error('Error uploading avatar:', error);
+    res.status(500).json({ error: 'Failed to upload avatar' });
   }
 });
 
